@@ -1,0 +1,1063 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Time Tracker</title>
+
+  <!-- Supabase 클라이언트 라이브러리 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Pretendard 폰트 적용 -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <style>
+    html, body {
+      font-size: 15px;
+    }
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+      letter-spacing: -1px;
+      background: transparent;
+      margin: 0;
+      padding: 0;
+      height: auto;
+    }
+    h1 {
+      margin-top: 28px;
+      font-size: 1.7rem;
+      color: #222;
+      text-align: center;
+      font-weight: normal;
+      letter-spacing: -1px;
+    }
+    #main-card {
+      background: rgba(255, 255, 255, 0.9);
+      border: 2px solid #C4DCFF;
+      box-shadow: 0 0 0 2px rgba(234, 244, 255, 0.8);
+      border-radius: 14px;
+      padding: 18px 12px 12px 12px;
+      margin: 24px auto 24px auto;
+      max-width: 370px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      backdrop-filter: blur(10px);
+    }
+    #task-form {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      margin-bottom: 8px;
+      width: 100%;
+      justify-content: center;
+    }
+    #task-form input[type="text"] {
+      width: 62px;
+      min-width: 44px;
+      max-width: 90px;
+      padding: 3px 6px;
+      border-radius: 7px;
+      border: 1.5px solid #C4DCFF;
+      font-size: 1.05rem;
+      outline: none;
+      background: rgba(255, 251, 231, 0.9);
+      font-family: 'Pretendard', sans-serif;
+      font-weight: 300;
+      transition: border 0.2s;
+    }
+    #task-form input[type="number"] {
+      width: 27px;
+      padding: 3px 1.5px;
+      border-radius: 7px;
+      border: 1.5px solid #C4DCFF;
+      font-size: 1.05rem;
+      outline: none;
+      background: rgba(255, 251, 231, 0.9);
+      font-family: 'Pretendard', sans-serif;
+      text-align: center;
+      font-weight: 300;
+      transition: border 0.2s;
+    }
+    #task-form button.form-btn {
+      width: 27px;
+      min-width: 27px;
+      height: 28px;
+      min-height: 28px;
+      padding: 0;
+      font-size: 1.05rem;
+      box-shadow: none;
+      margin-left: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #task-form input:focus {
+      border: 1.5px solid #AFC3C4;
+      background: rgba(255, 255, 255, 0.95);
+    }
+    #task-form button {
+      background: #F6CBD5;
+      color: #222;
+      border: 2px solid #F6CBD5;
+      border-radius: 8px;
+      padding: 4px 12px;
+      font-size: 1.2rem;
+      font-family: 'Pretendard', sans-serif;
+      font-weight: 300;
+      cursor: pointer;
+      transition: background 0.2s, border 0.2s;
+      box-shadow: 2px 2px 0 rgba(234, 244, 255, 0.8);
+      min-width: 32px;
+      min-height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #reset-btn {
+      background: #F6CBD5;
+      color: #222;
+      border: 2px solid #F6CBD5;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 1rem;
+      font-family: 'Pretendard', sans-serif;
+      font-weight: 300;
+      cursor: pointer;
+      margin-left: 4px;
+      transition: background 0.2s;
+      height: 32px;
+      line-height: 1;
+      vertical-align: middle;
+    }
+    #task-form button:hover, #reset-btn:hover {
+      background: #EBCEFF;
+      border: 2px solid #EBCEFF;
+    }
+    
+    /* 할 일 목록 토글 스타일 */
+    .task-list-toggle {
+      background: transparent;
+      border: none;
+      padding: 0;
+      font-size: 1.3rem;
+      color: #F6CBD5;
+      cursor: pointer;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      box-shadow: none;
+      transition: color 0.2s;
+    }
+    .task-list-toggle:hover {
+      color: #EBCEFF;
+    }
+    .task-list-toggle.collapsed::after {
+      content: "▼";
+      color: #F6CBD5;
+      font-size: 1.3rem;
+    }
+    .task-list-toggle.expanded::after {
+      content: "▲";
+      color: #F6CBD5;
+      font-size: 1.3rem;
+    }
+    
+    #task-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: flex-start;
+      width: 100%;
+      max-width: 320px;
+      max-height: 200px;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    
+    #task-list.collapsed {
+      max-height: 0;
+      overflow: hidden;
+    }
+    
+    .task-label {
+      display: flex;
+      align-items: center;
+      background: rgba(255, 251, 231, 0.9);
+      border-radius: 7px;
+      padding: 3px 9px;
+      font-size: 1.05rem;
+      font-weight: 300;
+      gap: 5px;
+      border: 1.7px solid #C4DCFF;
+      font-family: 'Pretendard', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .color-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 7px;
+      display: inline-block;
+      margin-right: 2px;
+      border: 1.7px solid #AFC3C4;
+    }
+    
+    #timetable-wrap {
+      background: rgba(255, 255, 255, 0.9);
+      border: 2px solid #C4DCFF;
+      border-radius: 16px;
+      box-shadow: 0 0 0 2.5px rgba(234, 244, 255, 0.8);
+      padding: 15px 15px 15px 15px;
+      margin-top: 6px;
+      display: flex;
+      justify-content: center;
+      backdrop-filter: blur(10px);
+    }
+    #timetable {
+      border-collapse: collapse;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 7px;
+      min-width: 270px;
+      font-family: 'Pretendard', sans-serif;
+      overflow: hidden;
+      table-layout: fixed;
+    }
+    #timetable th, #timetable td {
+      padding: 0;
+      text-align: center;
+      font-size: 1.05rem;
+      border: 1.7px solid #C4DCFF;
+      width: 28px;
+      height: 22px;
+      min-width: 28px;
+      min-height: 22px;
+      background: rgba(255, 255, 255, 0.9);
+      transition: background 0.2s;
+      font-family: 'Pretendard', sans-serif;
+      font-weight: 300;
+    }
+    #timetable th {
+      background: rgba(196, 220, 255, 0.9);
+      color: #222;
+      font-weight: 300;
+      height: 24px;
+      border-bottom: 1.7px solid #AFC3C4;
+      letter-spacing: -1px;
+    }
+    .hour-label {
+      background: rgba(255, 240, 202, 0.9);
+      font-weight: 300;
+      width: 28px;
+      min-width: 28px;
+      color: #888;
+      border-right: 1.5px solid #C4DCFF;
+      border-left: none;
+      font-family: 'Pretendard', sans-serif;
+    }
+    .cell-block {
+      width: 100%;
+      height: 100%;
+      border-radius: 0;
+      font-size: 0.85rem;
+      font-weight: 300;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+      overflow: hidden;
+      color: #222;
+      letter-spacing: -0.5px;
+      font-family: 'Pretendard', sans-serif;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    
+    .task-label {
+      display: flex;
+      align-items: center;
+      background: rgba(255, 251, 231, 0.9);
+      border-radius: 8px;
+      padding: 4px 10px;
+      font-size: 1rem;
+      font-weight: 300;
+      gap: 6px;
+      border: 2px solid #C4DCFF;
+      font-family: 'Pretendard', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .task-label:hover {
+      background: rgba(255, 232, 168, 0.9);
+      transform: translateY(-1px);
+    }
+    
+    .task-label.editing {
+      background: rgba(196, 220, 255, 0.9);
+      border-color: #AFC3C4;
+    }
+    
+    .delete-btn {
+      background: #ff6b6b;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 1.5px 5px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      margin-left: 3px;
+      font-family: 'Pretendard', sans-serif;
+      font-weight: 300;
+    }
+    
+    .delete-btn:hover {
+      background: #ff5252;
+    }
+    
+    .reset-btn {
+      background: #ff6b6b;
+      color: white;
+      border: 2px solid #ff5252;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 1rem;
+      font-family: 'Pretendard', sans-serif;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: 12px;
+    }
+    
+    .reset-btn:hover {
+      background: #ff5252;
+    }
+    .add-btn {
+      background: #F6CBD5;
+      color: #222;
+      border: 2px solid #F6CBD5;
+      border-radius: 8px;
+      padding: 4px 12px;
+      font-size: 1.2rem;
+      font-family: 'Pretendard', sans-serif;
+      font-weight: 300;
+      cursor: pointer;
+      transition: background 0.2s, border 0.2s;
+      box-shadow: 2px 2px 0 rgba(234, 244, 255, 0.8);
+      min-width: 32px;
+      min-height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .add-btn:hover {
+      background: #EBCEFF;
+      border: 2px solid #EBCEFF;
+    }
+    .reset-btn {
+      background: #F6CBD5;
+      color: #222;
+      border: 2px solid #F6CBD5;
+      border-radius: 8px;
+      padding: 4px 12px;
+      font-size: 1.2rem;
+      font-family: 'Pretendard', sans-serif;
+      font-weight: 300;
+      cursor: pointer;
+      transition: background 0.2s, border 0.2s;
+      box-shadow: 2px 2px 0 rgba(234, 244, 255, 0.8);
+      min-width: 32px;
+      min-height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .reset-btn:hover {
+      background: #EBCEFF;
+      border: 2px solid #EBCEFF;
+    }
+    .form-btn {
+      background: #F6CBD5;
+      color: #222;
+      border: 2px solid #F6CBD5;
+      border-radius: 7px;
+      padding: 2px 6px;
+      font-size: 0.9rem;
+      font-family: 'Pretendard', sans-serif;
+      font-weight: 300;
+      cursor: pointer;
+      transition: background 0.2s, border 0.2s;
+      box-shadow: 1.5px 1.5px 0 rgba(234, 244, 255, 0.8);
+      min-width: 24px;
+      min-height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 2px;
+    }
+    .form-btn:hover {
+      background: #EBCEFF;
+      border: 2px solid #EBCEFF;
+    }
+    .add-btn, .reset-btn { display: none !important; }
+    
+    /* 로그인 관련 스타일 */
+    #auth-container {
+      background: rgba(255, 255, 255, 0.95);
+      border: 2px solid #C4DCFF;
+      box-shadow: 0 0 0 2px rgba(234, 244, 255, 0.8);
+      border-radius: 14px;
+      padding: 16px;
+      margin: 24px auto 12px auto;
+      max-width: 370px;
+      text-align: center;
+      backdrop-filter: blur(10px);
+      font-family: 'Pretendard', sans-serif;
+    }
+    
+    #auth-container.hidden {
+      display: none;
+    }
+    
+    #auth-form input[type="email"], #auth-form input[type="password"] {
+      width: 200px;
+      padding: 8px 12px;
+      margin: 4px;
+      border: 1.5px solid #C4DCFF;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: 'Pretendard', sans-serif;
+      background: rgba(255, 251, 231, 0.9);
+      outline: none;
+    }
+    
+    #auth-form input:focus {
+      border-color: #AFC3C4;
+      background: rgba(255, 255, 255, 0.95);
+    }
+    
+    #auth-form button {
+      background: #F6CBD5;
+      color: #222;
+      border: 2px solid #F6CBD5;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 1rem;
+      font-family: 'Pretendard', sans-serif;
+      font-weight: 300;
+      cursor: pointer;
+      margin: 4px;
+      transition: background 0.2s, border 0.2s;
+      box-shadow: 2px 2px 0 rgba(234, 244, 255, 0.8);
+    }
+    
+    #auth-form button:hover {
+      background: #EBCEFF;
+      border: 2px solid #EBCEFF;
+    }
+    
+    #user-info {
+      font-size: 0.95rem;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    
+    #logout-btn {
+      background: transparent;
+      color: #888;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      margin-left: 8px;
+      transition: all 0.2s;
+    }
+    
+    #logout-btn:hover {
+      background: #f5f5f5;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <!-- 로그인/로그아웃 영역 -->
+  <div id="auth-container">
+    <div id="auth-form">
+      <div id="auth-content">
+        <div id="login-section">
+          <h3 style="margin: 0 0 12px 0; font-size: 1.1rem; font-weight: 300;">로그인</h3>
+          <input type="email" id="email" placeholder="이메일" required>
+          <br>
+          <input type="password" id="password" placeholder="비밀번호" required>
+          <br>
+          <button type="button" id="auth-toggle-btn">로그인</button>
+          <button type="button" id="signup-btn">회원가입</button>
+        </div>
+        <div id="user-section" class="hidden">
+          <div id="user-email" style="margin-bottom: 8px; font-size: 0.95rem; color: #666;"></div>
+          <button type="button" id="auth-toggle-btn">로그아웃</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div id="main-card">
+    <form id="task-form" autocomplete="off" style="flex-wrap:wrap;">
+      <input type="text" id="task-name" placeholder="할일" maxlength="10" required>
+      <input type="number" id="start-hour" min="0" max="23" placeholder="시" required>
+      <span>:</span>
+      <input type="number" id="start-min" min="0" max="59" placeholder="분" style="width:28px;">
+      <span>~</span>
+      <input type="number" id="end-hour" min="0" max="23" placeholder="시" required>
+      <span>:</span>
+      <input type="number" id="end-min" min="0" max="59" placeholder="분" style="width:28px;">
+      <button type="button" id="add-btn" class="form-btn">+</button>
+      <button type="button" id="reset-btn" class="form-btn">R</button>
+    </form>
+    
+    <!-- 할 일 목록 토글 컨테이너 -->
+    <div style="width:100%; display:flex; flex-direction:column; align-items:flex-start;">
+      <button class="task-list-toggle collapsed" id="task-list-toggle" style="margin:0 0 2px 25px;"></button>
+      <div id="task-list" class="collapsed" style="margin:10px 0 10px 30px;"></div>
+    </div>
+    
+    <div id="timetable-wrap">
+      <table id="timetable">
+        <thead>
+          <tr>
+            <th class="hour-label"></th>
+            <th>00</th>
+            <th>10</th>
+            <th>20</th>
+            <th>30</th>
+            <th>40</th>
+            <th>50</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- JS로 시간표 행이 채워집니다 -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <script>
+    // Supabase 초기화
+    const supabaseUrl = 'https://banfmxmtkpvfyoicpwda.supabase.co';
+    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhbmZteG10a3B2ZnlvaWNwd2RhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyNDgxMjAsImV4cCI6MjA3MzgyNDEyMH0.Dk_h31ZslWjwzQx6UeXM266kAx1z3Mgkoy0Nw8-KQaU';
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+    
+    let currentUser = null;
+
+    // 인증 관련 함수들
+    async function checkAuth() {
+      const { data: { user } } = await supabase.auth.getUser();
+      currentUser = user;
+      updateAuthUI();
+      if (user) {
+        await loadUserData();
+      }
+    }
+
+    function updateAuthUI() {
+      const loginSection = document.getElementById('login-section');
+      const userSection = document.getElementById('user-section');
+      const mainCard = document.getElementById('main-card');
+      const authToggleBtn = document.getElementById('auth-toggle-btn');
+
+      if (currentUser) {
+        // 로그인 상태
+        loginSection.classList.add('hidden');
+        userSection.classList.remove('hidden');
+        document.getElementById('user-email').textContent = currentUser.email;
+        authToggleBtn.textContent = '로그아웃';
+        mainCard.style.display = 'flex';
+      } else {
+        // 로그아웃 상태
+        loginSection.classList.remove('hidden');
+        userSection.classList.add('hidden');
+        authToggleBtn.textContent = '로그인';
+        mainCard.style.display = 'none';
+      }
+    }
+
+    async function signUp(email, password) {
+      const { data, error } = await supabase.auth.signUp({
+        email: email,
+        password: password,
+      });
+      if (error) {
+        alert('회원가입 실패: ' + error.message);
+      } else {
+        if (data.user && !data.user.email_confirmed_at) {
+          alert('회원가입 성공! 이메일 확인이 필요합니다.');
+        } else {
+          alert('회원가입 성공!');
+          currentUser = data.user;
+          updateAuthUI();
+          await loadUserData();
+        }
+      }
+    }
+
+    async function signIn(email, password) {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+      });
+      if (error) {
+        alert('로그인 실패: ' + error.message);
+      } else {
+        currentUser = data.user;
+        updateAuthUI();
+        await loadUserData();
+      }
+    }
+
+    async function signOut() {
+      const { error } = await supabase.auth.signOut();
+      if (!error) {
+        currentUser = null;
+        tasks.length = 0;
+        Object.keys(taskColors).forEach(key => delete taskColors[key]);
+        colorIndex = 0;
+        renderTaskList();
+        renderTimetable(tasks);
+        updateAuthUI();
+      }
+    }
+
+    // Supabase CRUD 함수들
+    async function loadUserData() {
+      if (!currentUser) return;
+      
+      try {
+        // 사용자 설정 로드
+        const { data: settings } = await supabase
+          .from('time_tracker_settings')
+          .select('color_index')
+          .eq('user_id', currentUser.id)
+          .eq('app_name', 'time-tracker')
+          .single();
+        
+        if (settings) {
+          colorIndex = settings.color_index;
+        }
+
+        // 색상 설정 로드
+        const { data: colors } = await supabase
+          .from('time_tracker_colors')
+          .select('task_name, color')
+          .eq('user_id', currentUser.id)
+          .eq('app_name', 'time-tracker');
+        
+        if (colors) {
+          Object.keys(taskColors).forEach(key => delete taskColors[key]);
+          colors.forEach(item => {
+            taskColors[item.task_name] = item.color;
+          });
+        }
+
+        // 작업 데이터 로드
+        const { data: tasksData } = await supabase
+          .from('time_tracker_tasks')
+          .select('name, start_time, end_time, color')
+          .eq('user_id', currentUser.id)
+          .eq('app_name', 'time-tracker')
+          .order('created_at', { ascending: true });
+        
+        if (tasksData) {
+          tasks.length = 0;
+          tasksData.forEach(task => {
+            tasks.push({
+              name: task.name,
+              start: task.start_time,
+              end: task.end_time,
+              color: task.color
+            });
+          });
+        }
+
+        renderTaskList();
+        renderTimetable(tasks);
+      } catch (error) {
+        console.error('데이터 로드 실패:', error);
+      }
+    }
+
+    async function saveUserData() {
+      if (!currentUser) return;
+      
+      try {
+        // 설정 저장 (upsert)
+        await supabase
+          .from('time_tracker_settings')
+          .upsert({
+            user_id: currentUser.id,
+            app_name: 'time-tracker',
+            color_index: colorIndex
+          }, {
+            onConflict: 'user_id,app_name'
+          });
+
+        // 기존 데이터 삭제 후 새로 저장 (간단한 방법)
+        await supabase
+          .from('time_tracker_tasks')
+          .delete()
+          .eq('user_id', currentUser.id)
+          .eq('app_name', 'time-tracker');
+
+        await supabase
+          .from('time_tracker_colors')
+          .delete()
+          .eq('user_id', currentUser.id)
+          .eq('app_name', 'time-tracker');
+
+        // 작업 데이터 저장
+        if (tasks.length > 0) {
+          const tasksToSave = tasks.map(task => ({
+            user_id: currentUser.id,
+            app_name: 'time-tracker',
+            name: task.name,
+            start_time: task.start,
+            end_time: task.end,
+            color: task.color
+          }));
+
+          await supabase
+            .from('time_tracker_tasks')
+            .insert(tasksToSave);
+        }
+
+        // 색상 데이터 저장
+        const colorsToSave = Object.entries(taskColors).map(([taskName, color]) => ({
+          user_id: currentUser.id,
+          app_name: 'time-tracker',
+          task_name: taskName,
+          color: color
+        }));
+
+        if (colorsToSave.length > 0) {
+          await supabase
+            .from('time_tracker_colors')
+            .insert(colorsToSave);
+        }
+
+      } catch (error) {
+        console.error('데이터 저장 실패:', error);
+      }
+    }
+
+    // 파스텔톤 색상 배열 (구글 캘린더 팔레트)
+    const pastelColors = [
+      "#FFD6E0", "#FFECB3", "#B2EBF2", "#C8E6C9", "#FFF9C4",
+      "#F8BBD0", "#B3E5FC", "#D1C4E9", "#FFCCBC", "#E1BEE7",
+      "#FCE4EC", "#E0F7FA", "#FFFDE7", "#F3E5F5", "#E0F2F1"
+    ];
+    let colorIndex = 0;
+    const taskColors = {}; // {할일: 색상}
+
+    // 시간/분 배열
+    const hours = [];
+    for (let h = 8; h <= 22; h++) hours.push(h);
+    const minutes = [0, 10, 20, 30, 40, 50];
+
+    // 테이블 행 생성
+    const timetableBody = document.querySelector("#timetable tbody");
+    for (let h of hours) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td class="hour-label">${h}</td>` +
+        minutes.map(() => `<td><div class="cell-block"></div></td>`).join('');
+      timetableBody.appendChild(tr);
+    }
+
+    // 할 일 목록 토글 기능
+    const taskListToggle = document.getElementById('task-list-toggle');
+    const taskList = document.getElementById('task-list');
+    
+    taskListToggle.addEventListener('click', function() {
+      const isCollapsed = taskList.classList.contains('collapsed');
+      if (isCollapsed) {
+        taskList.classList.remove('collapsed');
+        taskListToggle.classList.remove('collapsed');
+        taskListToggle.classList.add('expanded');
+      } else {
+        taskList.classList.add('collapsed');
+        taskListToggle.classList.add('collapsed');
+        taskListToggle.classList.remove('expanded');
+      }
+    });
+
+    // 할 일 목록 표시
+    function renderTaskList() {
+      const taskListDiv = document.getElementById("task-list");
+      taskListDiv.innerHTML = "";
+      tasks.forEach((task, index) => {
+        const label = document.createElement("span");
+        label.className = "task-label";
+        label.innerHTML = `
+          <span class="color-dot" style="background:${task.color}"></span>
+          <span class="task-name">${task.name}</span>
+          <button class="delete-btn" onclick="deleteTask(${index})">×</button>
+        `;
+        
+        // 클릭 시 수정 모드
+        label.addEventListener('click', (e) => {
+          if (!e.target.classList.contains('delete-btn')) {
+            editTask(index);
+          }
+        });
+        
+        taskListDiv.appendChild(label);
+      });
+    }
+
+    // 시간표에 할 일 표시 (colspan 방식, 셀 너비 고정)
+    function renderTimetable(tasks) {
+      timetableBody.innerHTML = "";
+
+      for (let h of hours) {
+        const tr = document.createElement("tr");
+        const hourTd = document.createElement("td");
+        hourTd.className = "hour-label";
+        hourTd.textContent = h;
+        tr.appendChild(hourTd);
+
+        let mIdx = 0;
+        while (mIdx < minutes.length) {
+          // 이 칸에 시작하는 할 일 찾기 (이 행에서 시작하는)
+          let found = null;
+          let colspan = 1;
+          let isTrueStart = false;
+          for (let t = 0; t < tasks.length; t++) {
+            const task = tasks[t];
+            let [sh, sm] = task.start.split(":").map(Number);
+            let [eh, em] = task.end.split(":").map(Number);
+            // 진짜 시작 셀인가?
+            if (h === sh && minutes[mIdx] === sm) {
+              found = task;
+              isTrueStart = true;
+              // 이 할 일이 이 행에서 차지하는 셀 개수 계산
+              let startIdx = mIdx;
+              let endIdx = (h === eh) ? minutes.findIndex(m => m === em) : minutes.length;
+              colspan = endIdx - startIdx;
+              if (colspan < 1) colspan = 1;
+              break;
+            }
+            // 이 행의 중간(이전 행에서 시작해서 이 행에 걸친) 셀인가?
+            if (h > sh && (h < eh || (h === eh && minutes[mIdx] < em)) && mIdx === 0) {
+              found = task;
+              isTrueStart = false;
+              // 이 할 일이 이 행에서 차지하는 셀 개수 계산
+              let startIdx = 0;
+              let endIdx = (h === eh) ? minutes.findIndex(m => m === em) : minutes.length;
+              colspan = endIdx - startIdx;
+              if (colspan < 1) colspan = 1;
+              break;
+            }
+          }
+          if (found) {
+            const td = document.createElement("td");
+            td.colSpan = colspan;
+            const div = document.createElement("div");
+            div.className = "cell-block";
+            div.style.background = found.color;
+            // 이름은 진짜 시작 셀에만 표시
+            if (isTrueStart) {
+              div.textContent = found.name;
+              div.title = found.name;
+            }
+            td.appendChild(div);
+            tr.appendChild(td);
+            mIdx += colspan;
+          } else {
+            // 빈 셀
+            const td = document.createElement("td");
+            const div = document.createElement("div");
+            div.className = "cell-block";
+            td.appendChild(div);
+            tr.appendChild(td);
+            mIdx += 1;
+          }
+        }
+        timetableBody.appendChild(tr);
+      }
+    }
+
+    // 할 일 삭제 함수 (확인 팝업 제거)
+    function deleteTask(index) {
+      tasks.splice(index, 1);
+      renderTaskList();
+      renderTimetable(tasks);
+      saveUserData(); // Supabase에 저장
+    }
+    
+    // 로그 기록 함수
+    function addLog(msg) {
+      const logArea = document.getElementById('log-area');
+      const now = new Date();
+      const time = now.toLocaleTimeString('ko-KR', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+      logArea.innerHTML = `<div>[${time}] ${msg}</div>` + logArea.innerHTML;
+    }
+
+    let editIndex = null;
+
+    // 할 일 추가/수정 버튼 이벤트
+    document.getElementById("add-btn").onclick = function() {
+      const name = document.getElementById("task-name").value.trim();
+      let sh = document.getElementById("start-hour").value;
+      let sm = document.getElementById("start-min").value;
+      let eh = document.getElementById("end-hour").value;
+      let em = document.getElementById("end-min").value;
+      sh = sh ? String(Number(sh)).padStart(2, "0") : "00";
+      sm = sm ? String(Number(sm)).padStart(2, "0") : "00";
+      eh = eh ? String(Number(eh)).padStart(2, "0") : "00";
+      em = em ? String(Number(em)).padStart(2, "0") : "00";
+      if (!name) return;
+      if (Number(sh) < 8 || Number(sh) > 22 || Number(eh) < 8 || Number(eh) > 22) {
+        alert("시간은 8~22시 사이로 입력해주세요.");
+        return;
+      }
+      if (sh > eh || (sh === eh && sm > em)) {
+        alert("시작 시간이 끝 시간보다 빠르거나 같아야 합니다.");
+        return;
+      }
+      if (editIndex !== null) {
+        // 수정 모드
+        const old = tasks[editIndex];
+        tasks[editIndex] = { name, start: `${sh}:${sm}`, end: `${eh}:${em}`, color: old.color };
+        renderTaskList();
+        renderTimetable(tasks);
+        editIndex = null;
+        // 버튼 텍스트 변경 제거
+      } else {
+        // 추가 모드
+        if (!taskColors[name]) {
+          taskColors[name] = pastelColors[colorIndex % pastelColors.length];
+          colorIndex++;
+        }
+        tasks.push({ name, start: `${sh}:${sm}`, end: `${eh}:${em}`, color: taskColors[name] });
+        renderTaskList();
+        renderTimetable(tasks);
+      }
+      document.getElementById("task-form").reset();
+      saveUserData(); // Supabase에 저장
+    };
+
+    // 할 일 수정 함수
+    function editTask(index) {
+      const task = tasks[index];
+      document.getElementById("task-name").value = task.name;
+      document.getElementById("start-hour").value = task.start.split(":")[0];
+      document.getElementById("start-min").value = task.start.split(":")[1];
+      document.getElementById("end-hour").value = task.end.split(":")[0];
+      document.getElementById("end-min").value = task.end.split(":")[1];
+      editIndex = index;
+      // 버튼 텍스트 변경 제거
+    }
+    
+    // 전체 리셋 함수
+    function resetAll() {
+      tasks.length = 0;
+      Object.keys(taskColors).forEach(key => delete taskColors[key]);
+      colorIndex = 0;
+      renderTaskList();
+      renderTimetable(tasks);
+      saveUserData(); // Supabase에 저장
+    }
+    
+    // 할 일 추가 이벤트
+    const tasks = [];
+    document.getElementById("task-form").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const name = document.getElementById("task-name").value.trim();
+      let sh = document.getElementById("start-hour").value;
+      let sm = document.getElementById("start-min").value;
+      let eh = document.getElementById("end-hour").value;
+      let em = document.getElementById("end-min").value;
+
+      // 시/분 입력값 보정
+      sh = sh ? String(Number(sh)).padStart(2, "0") : "00";
+      sm = sm ? String(Number(sm)).padStart(2, "0") : "00";
+      eh = eh ? String(Number(eh)).padStart(2, "0") : "00";
+      em = em ? String(Number(em)).padStart(2, "0") : "00";
+
+      // 분 입력 없으면 00으로 자동 처리
+      if (!document.getElementById("start-min").value) sm = "00";
+      if (!document.getElementById("end-min").value) em = "00";
+
+      // 범위 체크 (8~22시만 허용)
+      if (Number(sh) < 8 || Number(sh) > 22 || Number(eh) < 8 || Number(eh) > 22) {
+        alert("시간은 8~22시 사이로 입력해주세요.");
+        return;
+      }
+      // 시작이 끝보다 늦으면 오류
+      if (sh > eh || (sh === eh && sm > em)) {
+        alert("시작 시간이 끝 시간보다 빠르거나 같아야 합니다.");
+        return;
+      }
+      // 색상 지정
+      if (!taskColors[name]) {
+        taskColors[name] = pastelColors[colorIndex % pastelColors.length];
+        colorIndex++;
+      }
+      tasks.push({ name, start: `${sh}:${sm}`, end: `${eh}:${em}`, color: taskColors[name] });
+      renderTaskList();
+      renderTimetable(tasks);
+      document.getElementById("task-form").reset();
+      saveUserData(); // Supabase에 저장
+    });
+
+    // 리셋 버튼 이벤트
+    document.getElementById("reset-btn").addEventListener("click", resetAll);
+    
+    // 인증 이벤트 리스너들
+    document.getElementById("auth-toggle-btn").addEventListener("click", async () => {
+      if (currentUser) {
+        // 로그인 상태면 로그아웃
+        await signOut();
+      } else {
+        // 로그아웃 상태면 로그인
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        if (email && password) {
+          await signIn(email, password);
+        } else {
+          alert('이메일과 비밀번호를 입력해주세요.');
+        }
+      }
+    });
+
+    document.getElementById("signup-btn").addEventListener("click", async () => {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      if (email && password) {
+        if (password.length < 6) {
+          alert('비밀번호는 6자리 이상이어야 합니다.');
+          return;
+        }
+        await signUp(email, password);
+      } else {
+        alert('이메일과 비밀번호를 입력해주세요.');
+      }
+    });
+
+    // 엔터 키로 로그인
+    document.getElementById("password").addEventListener("keypress", async (e) => {
+      if (e.key === "Enter") {
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        if (email && password) {
+          await signIn(email, password);
+        }
+      }
+    });
+
+    // 초기화 및 인증 확인
+    document.addEventListener('DOMContentLoaded', checkAuth);
+    checkAuth();
+  </script>
+</body>
+</html>

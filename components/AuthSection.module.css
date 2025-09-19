@@ -1,0 +1,107 @@
+.authContainer {
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid #C4DCFF;
+  box-shadow: 0 0 0 2px rgba(234, 244, 255, 0.8);
+  border-radius: 14px;
+  padding: 16px;
+  margin: 24px auto 12px auto;
+  max-width: 370px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  font-family: 'Pretendard', sans-serif;
+}
+
+.authContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.loginSection {
+  width: 100%;
+}
+
+.userSection {
+  width: 100%;
+}
+
+.title {
+  margin: 0 0 12px 0;
+  font-size: 1.1rem;
+  font-weight: 300;
+  color: #222;
+}
+
+.input {
+  width: 200px;
+  padding: 8px 12px;
+  margin: 4px;
+  border: 1.5px solid #C4DCFF;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: 'Pretendard', sans-serif;
+  background: rgba(255, 251, 231, 0.9);
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.input:focus {
+  border-color: #AFC3C4;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.authButton {
+  background: #F6CBD5;
+  color: #222;
+  border: 2px solid #F6CBD5;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 1rem;
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 300;
+  cursor: pointer;
+  margin: 4px;
+  transition: background 0.2s, border 0.2s;
+  box-shadow: 2px 2px 0 rgba(234, 244, 255, 0.8);
+}
+
+.authButton:hover:not(:disabled) {
+  background: #EBCEFF;
+  border: 2px solid #EBCEFF;
+}
+
+.authButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.signupButton {
+  background: #F6CBD5;
+  color: #222;
+  border: 2px solid #F6CBD5;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 1rem;
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 300;
+  cursor: pointer;
+  margin: 4px;
+  transition: background 0.2s, border 0.2s;
+  box-shadow: 2px 2px 0 rgba(234, 244, 255, 0.8);
+}
+
+.signupButton:hover:not(:disabled) {
+  background: #EBCEFF;
+  border: 2px solid #EBCEFF;
+}
+
+.signupButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.userEmail {
+  font-size: 0.95rem;
+  color: #666;
+  margin-bottom: 8px;
+}

@@ -1,0 +1,75 @@
+.timetableWrap {
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid #C4DCFF;
+  border-radius: 16px;
+  box-shadow: 0 0 0 2.5px rgba(234, 244, 255, 0.8);
+  padding: 15px 15px 15px 15px;
+  margin-top: 6px;
+  display: flex;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+}
+
+.timetable {
+  border-collapse: collapse;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 7px;
+  min-width: 270px;
+  font-family: 'Pretendard', sans-serif;
+  overflow: hidden;
+  table-layout: fixed;
+}
+
+.timetable th,
+.timetable td {
+  padding: 0;
+  text-align: center;
+  font-size: 1.05rem;
+  border: 1.7px solid #C4DCFF;
+  width: 28px;
+  height: 22px;
+  min-width: 28px;
+  min-height: 22px;
+  background: rgba(255, 255, 255, 0.9);
+  transition: background 0.2s;
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 300;
+}
+
+.timetable th {
+  background: rgba(196, 220, 255, 0.9);
+  color: #222;
+  font-weight: 300;
+  height: 24px;
+  border-bottom: 1.7px solid #AFC3C4;
+  letter-spacing: -1px;
+}
+
+.hourLabel {
+  background: rgba(255, 240, 202, 0.9) !important;
+  font-weight: 300;
+  width: 28px;
+  min-width: 28px;
+  color: #888;
+  border-right: 1.5px solid #C4DCFF;
+  border-left: none;
+  font-family: 'Pretendard', sans-serif;
+}
+
+.cellBlock {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  font-size: 0.85rem;
+  font-weight: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  overflow: hidden;
+  color: #222;
+  letter-spacing: -0.5px;
+  font-family: 'Pretendard', sans-serif;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
