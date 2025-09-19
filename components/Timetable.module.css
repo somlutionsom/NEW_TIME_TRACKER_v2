@@ -3,8 +3,9 @@
   border: 2px solid #C4DCFF;
   border-radius: 16px;
   box-shadow: 0 0 0 2.5px rgba(234, 244, 255, 0.8);
-  padding: 15px 15px 15px 15px;
-  margin-top: 6px;
+  padding: 12px 12px 12px 12px;
+  margin-top: 4px;
+  margin-bottom: 4px;
   display: flex;
   justify-content: center;
   backdrop-filter: blur(10px);

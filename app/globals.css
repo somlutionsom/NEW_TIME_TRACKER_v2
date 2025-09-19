@@ -31,4 +31,6 @@ body {
   color: var(--foreground);
   margin: 0;
   padding: 0;
+  min-height: auto;
+  height: auto;
 }
